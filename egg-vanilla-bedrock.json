@@ -1,0 +1,164 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-07-13T18:16:10+05:30",
+    "name": "Vanilla Bedrock",
+    "author": "nevin@piemc.net",
+    "description": "Bedrock Edition (also known as the Bedrock Version, Bedrock Codebase, Bedrock Engine or just Bedrock) refers to the multi-platform family of editions of Minecraft developed by Mojang AB, Microsoft Studios, 4J Studios, and SkyBox Labs. Prior to this term, as the engine originated with Pocket Edition, this entire product family was referred to as \"Pocket Edition\", \"MCPE\", or \"Pocket\/Windows 10 Edition\".",
+    "features": [
+        "pid_limit"
+    ],
+    "docker_images": {
+        "ghcr.io\/parkervcp\/yolks:debian": "ghcr.io\/parkervcp\/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": ".\/bedrock_server",
+    "config": {
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-players\": \"{{server.build.env.MAX_PLAYERS}}\",\r\n            \"online-mode\": \"{{server.build.env.ONLINE_MODE}}\",\r\n            \"view-distance\": \"{{server.build.env.VIEW_DISTANCE}}\",\r\n            \"force-gamemode\": \"{{server.build.env.FORCE_GAMEMODE}}\",\r\n            \"tick-distance\": \"{{server.build.env.TICK_DISTANCE}}\",\r\n            \"texturepack-required\": \"{{server.build.env.TEXTUREPACK_REQUIRED}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
+        "logs": "{}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl jq\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ] && [ -n \"${BEDROCK_VERSION_CUSTOM}\" ]; then\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_CUSTOM}\"\r\nelse\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_TYPE}\"\r\nfi\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockLinux\") | .downloadUrl')\r\nelif [ \"${BEDROCK_VERSION}\" == \"preview\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock Preview server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockPreviewLinux\") | .downloadUrl')\r\nelse\r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\"\r\nfi\r\n\r\nDOWNLOAD_FILE=${DOWNLOAD_URL##*/}\r\n\r\nif [ -z \"$DOWNLOAD_URL\" ] || [ \"$DOWNLOAD_URL\" = \"null\" ]; then\r\n    echo -e \"Failed to get download URL. Aborting.\"\r\n    exit 1\r\nfi\r\n\r\necho -e \"backing up config files\"\r\nrm -f *.bak versions.html.gz 2>\/dev\/null\r\ncp server.properties server.properties.bak 2>\/dev\/null\r\ncp permissions.json permissions.json.bak 2>\/dev\/null\r\ncp allowlist.json allowlist.json.bak 2>\/dev\/null\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm -f $DOWNLOAD_FILE\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties 2>\/dev\/null\r\ncp -rf permissions.json.bak permissions.json 2>\/dev\/null\r\ncp -rf allowlist.json.bak allowlist.json 2>\/dev\/null\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\"",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Bedrock Version",
+            "description": "Select the version type to install.",
+            "env_variable": "BEDROCK_VERSION_TYPE",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:latest,preview,custom",
+            "field_type": "text"
+        },
+        {
+            "name": "Custom Version",
+            "description": "Specify an exact version (e.g. 1.26.33.2). Only used when Bedrock Version is set to \"custom\".",
+            "env_variable": "BEDROCK_VERSION_CUSTOM",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "ld lib path",
+            "description": "Dumb reasons to need this",
+            "env_variable": "LD_LIBRARY_PATH",
+            "default_value": ".",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Name",
+            "description": "The name for the server",
+            "env_variable": "SERVERNAME",
+            "default_value": "Bedrock Dedicated Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:50",
+            "field_type": "text"
+        },
+        {
+            "name": "Gamemode",
+            "description": "Allowed values: \"survival\", \"creative\", or \"adventure\"",
+            "env_variable": "GAMEMODE",
+            "default_value": "survival",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:survival,creative,adventure",
+            "field_type": "text"
+        },
+        {
+            "name": "Difficulty",
+            "description": "Allowed values: \"peaceful\", \"easy\", \"normal\", or \"hard\"",
+            "env_variable": "DIFFICULTY",
+            "default_value": "easy",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:peaceful,easy,normal,hard",
+            "field_type": "text"
+        },
+        {
+            "name": "Allow cheats",
+            "description": "If true then cheats like commands can be used.\r\n\r\nAllowed values: \"true\" or \"false\"",
+            "env_variable": "CHEATS",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Players",
+            "description": "Maximum number of players that can join the server.",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "10",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:1|max:1000",
+            "field_type": "text"
+        },
+        {
+            "name": "Online Mode",
+            "description": "If true, players must have a Microsoft/Xbox account to join. Set to false for offline/LAN play.",
+            "env_variable": "ONLINE_MODE",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Render Distance",
+            "description": "Maximum view distance in chunks. Lower values improve performance.",
+            "env_variable": "VIEW_DISTANCE",
+            "default_value": "32",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:4|max:96",
+            "field_type": "text"
+        },
+        {
+            "name": "Force Gamemode",
+            "description": "If true, players are always forced to the default gamemode on join.",
+            "env_variable": "FORCE_GAMEMODE",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Tick Distance",
+            "description": "Simulation distance in chunks. Controls how far entities and redstone are processed.",
+            "env_variable": "TICK_DISTANCE",
+            "default_value": "10",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:4|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "Texture Pack Required",
+            "description": "If true, players must accept the server's resource pack to join.",
+            "env_variable": "TEXTUREPACK_REQUIRED",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        }
+    ]
+}
