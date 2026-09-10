@@ -1,6 +1,6 @@
 # Pterodactyl Egg - Minecraft Vanilla Bedrock Dedicated Server
 
-A fully updated Pterodactyl egg for Minecraft Bedrock Dedicated Server with reliable API-based version fetching, preview channel support, and expanded configuration variables.
+An updated Pterodactyl egg for Minecraft Bedrock Dedicated Server with automatic version fetching, preview builds, custom versions, and expanded server configuration.
 
 ## Features
 
