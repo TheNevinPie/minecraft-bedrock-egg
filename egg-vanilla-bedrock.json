@@ -4,7 +4,7 @@
         "version": "PTDL_v2",
         "update_url": null
     },
-    "exported_at": "2026-07-13T18:16:10+05:30",
+    "exported_at": "2026-09-10T13:39:16+00:00",
     "name": "Vanilla Bedrock",
     "author": "nevin@piemc.net",
     "description": "Bedrock Edition (also known as the Bedrock Version, Bedrock Codebase, Bedrock Engine or just Bedrock) refers to the multi-platform family of editions of Minecraft developed by Mojang AB, Microsoft Studios, 4J Studios, and SkyBox Labs. Prior to this term, as the engine originated with Pocket Edition, this entire product family was referred to as \"Pocket Edition\", \"MCPE\", or \"Pocket\/Windows 10 Edition\".",
@@ -24,7 +24,7 @@
     },
     "scripts": {
         "installation": {
-            "script": "#!\/bin\/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl jq\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ] && [ -n \"${BEDROCK_VERSION_CUSTOM}\" ]; then\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_CUSTOM}\"\r\nelse\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_TYPE}\"\r\nfi\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockLinux\") | .downloadUrl')\r\nelif [ \"${BEDROCK_VERSION}\" == \"preview\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock Preview server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockPreviewLinux\") | .downloadUrl')\r\nelse\r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\"\r\nfi\r\n\r\nDOWNLOAD_FILE=${DOWNLOAD_URL##*/}\r\n\r\nif [ -z \"$DOWNLOAD_URL\" ] || [ \"$DOWNLOAD_URL\" = \"null\" ]; then\r\n    echo -e \"Failed to get download URL. Aborting.\"\r\n    exit 1\r\nfi\r\n\r\necho -e \"backing up config files\"\r\nrm -f *.bak versions.html.gz 2>\/dev\/null\r\ncp server.properties server.properties.bak 2>\/dev\/null\r\ncp permissions.json permissions.json.bak 2>\/dev\/null\r\ncp allowlist.json allowlist.json.bak 2>\/dev\/null\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm -f $DOWNLOAD_FILE\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties 2>\/dev\/null\r\ncp -rf permissions.json.bak permissions.json 2>\/dev\/null\r\ncp -rf allowlist.json.bak allowlist.json 2>\/dev\/null\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\"",
+            "script": "#!\/bin\/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl jq\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ] && [ -n \"${BEDROCK_VERSION_CUSTOM}\" ]; then\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_CUSTOM}\"\r\nelse\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_TYPE}\"\r\nfi\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockLinux\") | .downloadUrl')\r\nelif [ \"${BEDROCK_VERSION}\" == \"preview\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock Preview server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockPreviewLinux\") | .downloadUrl')\r\nelse\r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\"\r\nfi\r\n\r\nDOWNLOAD_FILE=${DOWNLOAD_URL##*\/}\r\n\r\nif [ -z \"$DOWNLOAD_URL\" ] || [ \"$DOWNLOAD_URL\" = \"null\" ]; then\r\n    echo -e \"Failed to get download URL. Aborting.\"\r\n    exit 1\r\nfi\r\n\r\necho -e \"backing up config files\"\r\nrm -f *.bak versions.html.gz 2>\/dev\/null\r\ncp server.properties server.properties.bak 2>\/dev\/null\r\ncp permissions.json permissions.json.bak 2>\/dev\/null\r\ncp allowlist.json allowlist.json.bak 2>\/dev\/null\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm -f $DOWNLOAD_FILE\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties 2>\/dev\/null\r\ncp -rf permissions.json.bak permissions.json 2>\/dev\/null\r\ncp -rf allowlist.json.bak allowlist.json 2>\/dev\/null\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\"",
             "container": "ghcr.io\/parkervcp\/installers:debian",
             "entrypoint": "bash"
         }
@@ -112,7 +112,7 @@
         },
         {
             "name": "Online Mode",
-            "description": "If true, players must have a Microsoft/Xbox account to join. Set to false for offline/LAN play.",
+            "description": "If true, players must have a Microsoft\/Xbox account to join. Set to false for offline\/LAN play.",
             "env_variable": "ONLINE_MODE",
             "default_value": "true",
             "user_viewable": true,
@@ -152,7 +152,7 @@
         },
         {
             "name": "Texture Pack Required",
-            "description": "If true, players must accept the server's resource pack to join.",
+            "description": "If true, players must accept the server's resource pack to join. It also prevents players from using their own global resource packs while connected to the server.",
             "env_variable": "TEXTUREPACK_REQUIRED",
             "default_value": "false",
             "user_viewable": true,
