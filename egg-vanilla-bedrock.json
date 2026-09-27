@@ -32,7 +32,7 @@
     "variables": [
         {
             "name": "Bedrock Version",
-            "description": "Select the version type to install.",
+            "description": "Select the version type to install. NetherNet behind Docker needs 1.26.51 or newer; latest is recommended.",
             "env_variable": "BEDROCK_VERSION_TYPE",
             "default_value": "latest",
             "user_viewable": true,
@@ -162,7 +162,7 @@
         },
         {
             "name": "Network Transport",
-            "description": "Network transport used to accept client connections. NetherNet (WebRTC) is the current default; switch to RakNet only for old clients that cannot connect otherwise.",
+            "description": "Transport used to accept client connections. NetherNet (WebRTC) is the default and the only transport past version 26.60. RakNet is a temporary fallback for old clients that cannot connect otherwise - do not deploy new servers on it.",
             "env_variable": "TRANSPORT",
             "default_value": "nethernet",
             "user_viewable": true,
@@ -172,7 +172,7 @@
         },
         {
             "name": "NetherNet UDP Ports",
-            "description": "UDP ports for NetherNet client peer-to-peer transport. Leave empty to allocate from OS ephemeral ports. Pin a range on firewalled hosts (e.g. 32100-32149, one panel allocation per port required). NAT\/Docker mapping form: PUBLIC_IP:EXTERNAL-START-EXTERNAL-END:INTERNAL-START-INTERNAL-END (e.g. 203.0.113.10:32100-32149:32100-32149). Ignored when Transport is raknet.",
+            "description": "UDP port or range for NetherNet peer-to-peer connections (e.g. 32100-32149). Create one panel allocation per port and open them as UDP in the firewall. Docker\/NAT mapping form: PUBLIC_IP:EXTERNAL-RANGE:INTERNAL-RANGE (e.g. 203.0.113.10:32100-32149:32100-32149) - the public-IP prefix is required behind Docker, otherwise clients get unreachable container addresses. Empty means OS ephemeral ports (stateful firewalls only, no Docker NAT). Ignored when Transport is raknet.",
             "env_variable": "SERVER_UDP_PORTS",
             "default_value": "",
             "user_viewable": true,
