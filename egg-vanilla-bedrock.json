@@ -15,7 +15,7 @@
         "ghcr.io\/parkervcp\/yolks:debian": "ghcr.io\/parkervcp\/yolks:debian"
     },
     "file_denylist": [],
-    "startup": ".\/bedrock_server",
+    "startup": "NET_UDP_COMPOSED=\"\"; if [ -n \"${NET_INT_PORTS}\" ]; then case \"${NET_INT_PORTS}\" in *[!0-9-]* ) echo \"[Egg] WARNING: NET_INT_PORTS contains invalid characters (digits and dash only, e.g. 32100-32149), ignoring NetherNet range\"; NET_INT_PORTS=\"\";; esac; case \"${NET_EXT_PORTS}\" in *[!0-9-]* ) echo \"[Egg] WARNING: NET_EXT_PORTS contains invalid characters (digits and dash only, e.g. 32100-32149), ignoring external mapping\"; NET_EXT_PORTS=\"\";; esac; if [ -n \"${NET_PUBLIC_IP}\" ] && [ -n \"${NET_EXT_PORTS}\" ] && [ -n \"${NET_INT_PORTS}\" ]; then NET_UDP_COMPOSED=\"${NET_PUBLIC_IP}:${NET_EXT_PORTS}:${NET_INT_PORTS}\"; else NET_UDP_COMPOSED=\"${NET_INT_PORTS}\"; fi; fi; if [ \"${TRANSPORT}\" != \"raknet\" ] && [ \"${TRANSPORT}\" != \"nethernet\" ]; then echo \"[Egg] WARNING: TRANSPORT has unexpected value '${TRANSPORT}', expected raknet or nethernet\"; fi; if [ \"${TRANSPORT}\" = \"raknet\" ]; then if [ -n \"${SERVER_UDP_PORTS}\" ] || [ -n \"${NET_UDP_COMPOSED}\" ]; then echo \"[Egg] NOTICE: NetherNet port settings are ignored while TRANSPORT=raknet\"; fi; elif [ -n \"${SERVER_UDP_PORTS}\" ]; then echo \"[Egg] Using explicit SERVER_UDP_PORTS override, split Public IP \/ External Ports \/ Internal Ports variables ignored\"; elif [ -n \"${NET_UDP_COMPOSED}\" ]; then if [ -f server.properties ]; then if grep -q '^server-udp-ports=' server.properties; then sed -i \"s\/^server-udp-ports=.*$\/server-udp-ports=${NET_UDP_COMPOSED}\/\" server.properties; else echo \"\" >> server.properties; echo \"server-udp-ports=${NET_UDP_COMPOSED}\" >> server.properties; fi; echo \"[Egg] NetherNet P2P ports configured: ${NET_UDP_COMPOSED} (panel allocations + firewall rules for these UDP ports are required)\"; else echo \"[Egg] WARNING: server.properties not found, cannot apply NetherNet port range\"; fi; else echo \"[Egg] NOTICE: NetherNet ephemeral port mode (no pinned range). Fine behind stateful firewalls; pin NET_INT_PORTS (+ allocations + firewall) for strict firewalls or Docker NAT advertisement\"; fi; exec .\/bedrock_server",
     "config": {
         "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-players\": \"{{server.build.env.MAX_PLAYERS}}\",\r\n            \"online-mode\": \"{{server.build.env.ONLINE_MODE}}\",\r\n            \"view-distance\": \"{{server.build.env.VIEW_DISTANCE}}\",\r\n            \"force-gamemode\": \"{{server.build.env.FORCE_GAMEMODE}}\",\r\n            \"tick-distance\": \"{{server.build.env.TICK_DISTANCE}}\",\r\n            \"texturepack-required\": \"{{server.build.env.TEXTUREPACK_REQUIRED}}\",\r\n            \"transport\": \"{{server.build.env.TRANSPORT}}\",\r\n            \"server-udp-ports\": \"{{server.build.env.SERVER_UDP_PORTS}}\",\r\n            \"server-portv6\": \"{{server.build.env.SERVER_PORT_V6}}\",\r\n            \"enable-lan-visibility\": \"{{server.build.env.LAN_VISIBILITY}}\"\r\n        }\r\n    }\r\n}",
         "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
@@ -24,7 +24,7 @@
     },
     "scripts": {
         "installation": {
-            "script": "#!\/bin\/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl jq\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ] && [ -n \"${BEDROCK_VERSION_CUSTOM}\" ]; then\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_CUSTOM}\"\r\nelse\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_TYPE}\"\r\nfi\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockLinux\") | .downloadUrl')\r\nelif [ \"${BEDROCK_VERSION}\" == \"preview\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock Preview server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockPreviewLinux\") | .downloadUrl')\r\nelse\r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\"\r\nfi\r\n\r\nDOWNLOAD_FILE=${DOWNLOAD_URL##*\/}\r\n\r\nif [ -z \"$DOWNLOAD_URL\" ] || [ \"$DOWNLOAD_URL\" = \"null\" ]; then\r\n    echo -e \"Failed to get download URL. Aborting.\"\r\n    exit 1\r\nfi\r\n\r\necho -e \"backing up config files\"\r\nrm -rf *.bak keys.bak versions.html.gz 2>\/dev\/null\r\ncp server.properties server.properties.bak 2>\/dev\/null\r\ncp permissions.json permissions.json.bak 2>\/dev\/null\r\ncp allowlist.json allowlist.json.bak 2>\/dev\/null\r\ncp -r keys keys.bak 2>\/dev\/null\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm -f $DOWNLOAD_FILE\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties 2>\/dev\/null\r\ncp -rf permissions.json.bak permissions.json 2>\/dev\/null\r\ncp -rf allowlist.json.bak allowlist.json 2>\/dev\/null\r\nif [ -d keys.bak ]; then rm -rf keys; cp -r keys.bak keys; fi 2>\/dev\/null\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\"",
+            "script": "#!\/bin\/bash\n\napt update\napt install -y zip unzip wget curl jq\n\nif [ ! -d \/mnt\/server\/ ]; then\n    mkdir \/mnt\/server\/\nfi\n\ncd \/mnt\/server\n\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ] && [ -n \"${BEDROCK_VERSION_CUSTOM}\" ]; then\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_CUSTOM}\"\nelse\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_TYPE}\"\nfi\n\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ]; then\n    case \"${BEDROCK_VERSION}\" in\n        1.26.5[1-9]*|1.26.[6-9]*|1.2[7-9]*|1.[3-9]*|2.*) ;;\n        *) echo -e \"WARNING: custom version ${BEDROCK_VERSION} is below 1.26.51 - NetherNet behind Docker\/NAT needs 1.26.51 or newer (1.26.50.x cannot open gameplay sockets). Consider latest instead.\";;\n    esac\nfi\n\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\n    echo -e \"\\n Fetching latest Bedrock server URL from API\"\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockLinux\") | .downloadUrl')\nelif [ \"${BEDROCK_VERSION}\" == \"preview\" ]; then\n    echo -e \"\\n Fetching latest Bedrock Preview server URL from API\"\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockPreviewLinux\") | .downloadUrl')\nelse\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\"\nfi\n\nDOWNLOAD_FILE=${DOWNLOAD_URL##*\/}\n\nif [ -z \"$DOWNLOAD_URL\" ] || [ \"$DOWNLOAD_URL\" = \"null\" ]; then\n    echo -e \"Failed to get download URL. Aborting.\"\n    exit 1\nfi\n\necho -e \"backing up config files\"\nrm -rf *.bak keys.bak versions.html.gz 2>\/dev\/null\ncp server.properties server.properties.bak 2>\/dev\/null\ncp permissions.json permissions.json.bak 2>\/dev\/null\ncp allowlist.json allowlist.json.bak 2>\/dev\/null\ncp -r keys keys.bak 2>\/dev\/null\n\necho -e \"Downloading files from: $DOWNLOAD_URL\"\n\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\n\necho -e \"Unpacking server files\"\nunzip -o $DOWNLOAD_FILE\n\necho -e \"Cleaning up after installing\"\nrm -f $DOWNLOAD_FILE\n\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\ncp -rf server.properties.bak server.properties 2>\/dev\/null\ncp -rf permissions.json.bak permissions.json 2>\/dev\/null\ncp -rf allowlist.json.bak allowlist.json 2>\/dev\/null\nif [ -d keys.bak ]; then rm -rf keys; cp -r keys.bak keys; fi 2>\/dev\/null\n\nif [ ! -f keys\/server_identity_key.pem ]; then\n    if command -v openssl >\/dev\/null 2>&1; then\n        echo -e \"generating server identity key (players will not need to re-accept server trust after reinstalls)\"\n        mkdir -p keys\n        openssl ecparam -name secp384r1 -genkey -noout -out keys\/server_identity_key.pem 2>\/dev\/null\n        chmod 600 keys\/server_identity_key.pem 2>\/dev\/null\n    else\n        echo -e \"openssl not available, skipping server identity key generation\"\n    fi\nfi\n\nchmod +x bedrock_server\n\necho -e \"Install Completed\"",
             "container": "ghcr.io\/parkervcp\/installers:debian",
             "entrypoint": "bash"
         }
@@ -171,8 +171,8 @@
             "field_type": "text"
         },
         {
-            "name": "NetherNet UDP Ports",
-            "description": "UDP ports for NetherNet client peer-to-peer transport. Leave empty to allocate from OS ephemeral ports. Pin a range on firewalled hosts (e.g. 32100-32149, one panel allocation per port required). NAT/Docker mapping form: PUBLIC_IP:EXTERNAL-START-EXTERNAL-END:INTERNAL-START-INTERNAL-END (e.g. 203.0.113.10:32100-32149:32100-32149). Ignored when Transport is raknet.",
+            "name": "NetherNet UDP Ports (Advanced Override)",
+            "description": "ADVANCED OVERRIDE: complete server-udp-ports value, takes precedence over the split Public IP \/ External Ports \/ Internal Ports variables below. Prefer the split variables; use this only for multi-entry or unusual mappings. Leave empty unless overriding. Ignored when Transport is raknet.",
             "env_variable": "SERVER_UDP_PORTS",
             "default_value": "",
             "user_viewable": true,
@@ -192,12 +192,42 @@
         },
         {
             "name": "LAN Visibility",
-            "description": "Respond to clients looking for servers on the LAN. Turn off on shared hosts or multi-server nodes to avoid port conflicts (under RakNet the server binds 19132/19133 for discovery even with custom ports).",
+            "description": "Respond to clients looking for servers on the LAN. Turn off on shared hosts or multi-server nodes to avoid port conflicts (under RakNet the server binds 19132\/19133 for discovery even with custom ports).",
             "env_variable": "LAN_VISIBILITY",
             "default_value": "false",
             "user_viewable": true,
             "user_editable": true,
             "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "NetherNet Public IP",
+            "description": "Public address clients use to reach this server (the ip: prefix of the NetherNet port mapping). Required together with External\/Internal Ports behind Docker or NAT, otherwise clients are handed unreachable container addresses. Leave empty for ephemeral mode or directly-connected hosts.",
+            "env_variable": "NET_PUBLIC_IP",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:45",
+            "field_type": "text"
+        },
+        {
+            "name": "NetherNet External Ports",
+            "description": "Client-facing UDP port or inclusive range advertised to players (e.g. 32100-32149). Must be open in the firewall and have one panel allocation per port on panel hosts. Requires Public IP and Internal Ports; leave all three empty for ephemeral mode.",
+            "env_variable": "NET_EXT_PORTS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:30",
+            "field_type": "text"
+        },
+        {
+            "name": "NetherNet Internal Ports",
+            "description": "Container-local UDP port or inclusive range BDS binds (e.g. 32100-32149). Must be the same length as External Ports; ports pair by offset. With 1:1 panel allocations use the same range for both. Leave empty for ephemeral mode.",
+            "env_variable": "NET_INT_PORTS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:30",
             "field_type": "text"
         }
     ]
