@@ -1,47 +1,40 @@
 # Changelog
 
 All notable changes to this egg are documented here, newest first.
-Versioning was ad-hoc before 2026-09-27; strict SemVer (`MAJOR.MINOR.PATCH`)
-applies to all releases cut after that date. See [RELEASING.md](./RELEASING.md).
+Releases follow strict SemVer (`MAJOR.MINOR.PATCH`); see
+[RELEASING.md](./RELEASING.md). Tags `v1.0`, `v1.0.0`, `v1.1`, `v1.2`, and
+`v1.3` predate the policy (two-part numbers, and an empty `v1.1`); only
+`v1.0` and `v1.1` remain published, the rest were removed before any
+adoption. `v1.2.0` is the first strict-SemVer release.
 
 ## [Unreleased]
 
-## [v1.3] - 2026-09-27
+## [1.2.0] - 2026-09-27
 
-Added (guided NetherNet setup):
-- Startup wrapper composes `server-udp-ports` from `NET_PUBLIC_IP`,
-  `NET_EXT_PORTS`, `NET_INT_PORTS`, with precedence override → composed →
-  ephemeral and console preflight warnings (bad values, RakNet conflicts,
-  ephemeral mode, missing `server.properties`, unexpected transport).
-- New variables: `NET_PUBLIC_IP`, `NET_EXT_PORTS`, `NET_INT_PORTS`;
-  `SERVER_UDP_PORTS` repurposed as advanced override.
-- Install generates a P-384 server identity key on first install, so players
-  stop getting re-accept-trust prompts after reinstalls.
-- Install warns when a custom version is below 1.26.51 (1.26.50.x cannot open
-  gameplay sockets behind Docker/NAT).
+Added (NetherNet support, verified against live BDS 1.26.51.1):
+- New variables: `TRANSPORT` (default `nethernet`), `SERVER_UDP_PORTS`
+  (Docker/NAT mapping form supported), `SERVER_PORT_V6`, `LAN_VISIBILITY`
+  (default `false`), all wired into the `server.properties`
+  auto-configuration.
+- Install backs up and restores the `keys/` server identity key, and
+  generates a fresh P-384 key on first install so players stop getting
+  re-accept-trust prompts.
+- Install warns when a custom version is below 1.26.51 (1.26.50.x builds
+  never open gameplay sockets in containers and silently wipe
+  `server-udp-ports`).
+- README NetherNet runbook: allocations, mapping forms, version floor,
+  trust prompts, Door checklist, RakNet fallback.
 
 Fixed:
 - Install script had mixed `\n\r` line endings that break Bash; normalized
   to LF-only.
 
-## [v1.2] - 2026-09-27
-
-Added (NetherNet transport support):
-- New variables: `TRANSPORT` (default `nethernet`), `SERVER_UDP_PORTS`,
-  `SERVER_PORT_V6`, `LAN_VISIBILITY` (default `false`), all wired into the
-  `server.properties` auto-configuration.
-- Install backs up and restores the `keys/` server identity key.
-
-## [v1.1] - 2026-09-10
+## [1.1] - 2026-09-10
 
 No code changes (same commit as v1.0).
 
-## [v1.0] - 2026-09-10
+## [1.0] - 2026-09-10
 
 - Refreshed egg metadata, README description and feature list.
 - Expanded server configuration variables, API-based version fetching,
   preview channel, custom versions.
-
-## [v1.0.0] - 2026-07-13
-
-- Initial Vanilla Bedrock egg (nullable world name field).

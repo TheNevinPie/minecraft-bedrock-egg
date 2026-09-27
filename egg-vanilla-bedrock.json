@@ -15,7 +15,7 @@
         "ghcr.io\/parkervcp\/yolks:debian": "ghcr.io\/parkervcp\/yolks:debian"
     },
     "file_denylist": [],
-    "startup": "NET_UDP_COMPOSED=\"\"; if [ -n \"${NET_INT_PORTS}\" ]; then case \"${NET_INT_PORTS}\" in *[!0-9-]* ) echo \"[Egg] WARNING: NET_INT_PORTS contains invalid characters (digits and dash only, e.g. 32100-32149), ignoring NetherNet range\"; NET_INT_PORTS=\"\";; esac; case \"${NET_EXT_PORTS}\" in *[!0-9-]* ) echo \"[Egg] WARNING: NET_EXT_PORTS contains invalid characters (digits and dash only, e.g. 32100-32149), ignoring external mapping\"; NET_EXT_PORTS=\"\";; esac; if [ -n \"${NET_PUBLIC_IP}\" ] && [ -n \"${NET_EXT_PORTS}\" ] && [ -n \"${NET_INT_PORTS}\" ]; then NET_UDP_COMPOSED=\"${NET_PUBLIC_IP}:${NET_EXT_PORTS}:${NET_INT_PORTS}\"; else NET_UDP_COMPOSED=\"${NET_INT_PORTS}\"; fi; fi; if [ \"${TRANSPORT}\" != \"raknet\" ] && [ \"${TRANSPORT}\" != \"nethernet\" ]; then echo \"[Egg] WARNING: TRANSPORT has unexpected value '${TRANSPORT}', expected raknet or nethernet\"; fi; if [ \"${TRANSPORT}\" = \"raknet\" ]; then if [ -n \"${SERVER_UDP_PORTS}\" ] || [ -n \"${NET_UDP_COMPOSED}\" ]; then echo \"[Egg] NOTICE: NetherNet port settings are ignored while TRANSPORT=raknet\"; fi; elif [ -n \"${SERVER_UDP_PORTS}\" ]; then echo \"[Egg] Using explicit SERVER_UDP_PORTS override, split Public IP \/ External Ports \/ Internal Ports variables ignored\"; elif [ -n \"${NET_UDP_COMPOSED}\" ]; then if [ -f server.properties ]; then if grep -q '^server-udp-ports=' server.properties; then sed -i \"s\/^server-udp-ports=.*$\/server-udp-ports=${NET_UDP_COMPOSED}\/\" server.properties; else echo \"\" >> server.properties; echo \"server-udp-ports=${NET_UDP_COMPOSED}\" >> server.properties; fi; echo \"[Egg] NetherNet P2P ports configured: ${NET_UDP_COMPOSED} (panel allocations + firewall rules for these UDP ports are required)\"; else echo \"[Egg] WARNING: server.properties not found, cannot apply NetherNet port range\"; fi; else echo \"[Egg] NOTICE: NetherNet ephemeral port mode (no pinned range). Fine behind stateful firewalls; pin NET_INT_PORTS (+ allocations + firewall) for strict firewalls or Docker NAT advertisement\"; fi; exec .\/bedrock_server",
+    "startup": ".\/bedrock_server",
     "config": {
         "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-players\": \"{{server.build.env.MAX_PLAYERS}}\",\r\n            \"online-mode\": \"{{server.build.env.ONLINE_MODE}}\",\r\n            \"view-distance\": \"{{server.build.env.VIEW_DISTANCE}}\",\r\n            \"force-gamemode\": \"{{server.build.env.FORCE_GAMEMODE}}\",\r\n            \"tick-distance\": \"{{server.build.env.TICK_DISTANCE}}\",\r\n            \"texturepack-required\": \"{{server.build.env.TEXTUREPACK_REQUIRED}}\",\r\n            \"transport\": \"{{server.build.env.TRANSPORT}}\",\r\n            \"server-udp-ports\": \"{{server.build.env.SERVER_UDP_PORTS}}\",\r\n            \"server-portv6\": \"{{server.build.env.SERVER_PORT_V6}}\",\r\n            \"enable-lan-visibility\": \"{{server.build.env.LAN_VISIBILITY}}\"\r\n        }\r\n    }\r\n}",
         "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
@@ -171,8 +171,8 @@
             "field_type": "text"
         },
         {
-            "name": "NetherNet UDP Ports (Advanced Override)",
-            "description": "ADVANCED OVERRIDE: complete server-udp-ports value, takes precedence over the split Public IP \/ External Ports \/ Internal Ports variables below. Prefer the split variables; use this only for multi-entry or unusual mappings. Leave empty unless overriding. Ignored when Transport is raknet.",
+            "name": "NetherNet UDP Ports",
+            "description": "UDP ports for NetherNet client peer-to-peer transport. Leave empty to allocate from OS ephemeral ports. Pin a range on firewalled hosts (e.g. 32100-32149, one panel allocation per port required). NAT\/Docker mapping form: PUBLIC_IP:EXTERNAL-START-EXTERNAL-END:INTERNAL-START-INTERNAL-END (e.g. 203.0.113.10:32100-32149:32100-32149). Ignored when Transport is raknet.",
             "env_variable": "SERVER_UDP_PORTS",
             "default_value": "",
             "user_viewable": true,
@@ -198,36 +198,6 @@
             "user_viewable": true,
             "user_editable": true,
             "rules": "required|string|in:true,false",
-            "field_type": "text"
-        },
-        {
-            "name": "NetherNet Public IP",
-            "description": "Public address clients use to reach this server (the ip: prefix of the NetherNet port mapping). Required together with External\/Internal Ports behind Docker or NAT, otherwise clients are handed unreachable container addresses. Leave empty for ephemeral mode or directly-connected hosts.",
-            "env_variable": "NET_PUBLIC_IP",
-            "default_value": "",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "nullable|string|max:45",
-            "field_type": "text"
-        },
-        {
-            "name": "NetherNet External Ports",
-            "description": "Client-facing UDP port or inclusive range advertised to players (e.g. 32100-32149). Must be open in the firewall and have one panel allocation per port on panel hosts. Requires Public IP and Internal Ports; leave all three empty for ephemeral mode.",
-            "env_variable": "NET_EXT_PORTS",
-            "default_value": "",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "nullable|string|max:30",
-            "field_type": "text"
-        },
-        {
-            "name": "NetherNet Internal Ports",
-            "description": "Container-local UDP port or inclusive range BDS binds (e.g. 32100-32149). Must be the same length as External Ports; ports pair by offset. With 1:1 panel allocations use the same range for both. Leave empty for ephemeral mode.",
-            "env_variable": "NET_INT_PORTS",
-            "default_value": "",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "nullable|string|max:30",
             "field_type": "text"
         }
     ]

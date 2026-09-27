@@ -1,9 +1,11 @@
 # Releasing
 
 Releases follow strict [Semantic Versioning](https://semver.org/): `vMAJOR.MINOR.PATCH`
-(three numeric parts, always). Pre-1.3 tags (`v1.0`, `v1.0.0`, `v1.1`, `v1.2`,
-`v1.3`) predate this policy and are left untouched — published tags and
-releases are never rewritten, moved, or deleted.
+(three numeric parts, always). The old two-part tags (`v1.0`, `v1.1`, plus the
+removed `v1.0.0`/`v1.2`/`v1.3`) predate this policy; `v1.2.0` is the first
+strict release. Published tags and releases are never rewritten, moved, or
+deleted — the old ones were removed before any adoption, which is the only
+case where removal is acceptable.
 
 ## Bump rules (egg-specific)
 
