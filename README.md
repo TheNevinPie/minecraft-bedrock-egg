@@ -32,6 +32,12 @@ An updated Pterodactyl egg for Minecraft Bedrock Dedicated Server with automatic
 | `SERVER_UDP_PORTS` | *(empty)* | NetherNet P2P UDP ports (see Setup below; empty = ephemeral) |
 | `SERVER_PORT_V6` | `19133` | IPv6 port (RakNet mode only) |
 | `LAN_VISIBILITY` | `false` | Respond to LAN discovery (keep off on shared hosts) |
+| `ALLOW_LIST` | `false` | Require `allowlist.json` entry to join (BDS 1.26.30+ defaults true; empty list + true locks everyone out) |
+| `CHAT_RESTRICTION` | `None` | Chat level: `None` free chat, `Dropped` discards with notice, `Disabled` hides UI from non-ops |
+| `DEFAULT_PERMISSION` | `member` | Permission for first-time joins (`visitor`/`member`/`operator`) |
+| `DISABLE_CUSTOM_SKINS` | `false` | Block non-official player skins (family servers) |
+| `MAX_THREADS` | `8` | Max CPU threads for BDS (`0` = no cap) |
+| `COMPRESSION_ALGORITHM` | `zlib` | Packet compression: `zlib` smaller/`snappy` cheaper CPU (use snappy on weak hosts) |
 
 ## NetherNet runbook
 

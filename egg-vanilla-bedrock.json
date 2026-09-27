@@ -17,7 +17,7 @@
     "file_denylist": [],
     "startup": ".\/bedrock_server",
     "config": {
-        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-players\": \"{{server.build.env.MAX_PLAYERS}}\",\r\n            \"online-mode\": \"{{server.build.env.ONLINE_MODE}}\",\r\n            \"view-distance\": \"{{server.build.env.VIEW_DISTANCE}}\",\r\n            \"force-gamemode\": \"{{server.build.env.FORCE_GAMEMODE}}\",\r\n            \"tick-distance\": \"{{server.build.env.TICK_DISTANCE}}\",\r\n            \"texturepack-required\": \"{{server.build.env.TEXTUREPACK_REQUIRED}}\",\r\n            \"transport\": \"{{server.build.env.TRANSPORT}}\",\r\n            \"server-udp-ports\": \"{{server.build.env.SERVER_UDP_PORTS}}\",\r\n            \"server-portv6\": \"{{server.build.env.SERVER_PORT_V6}}\",\r\n            \"enable-lan-visibility\": \"{{server.build.env.LAN_VISIBILITY}}\"\r\n        }\r\n    }\r\n}",
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-players\": \"{{server.build.env.MAX_PLAYERS}}\",\r\n            \"online-mode\": \"{{server.build.env.ONLINE_MODE}}\",\r\n            \"view-distance\": \"{{server.build.env.VIEW_DISTANCE}}\",\r\n            \"force-gamemode\": \"{{server.build.env.FORCE_GAMEMODE}}\",\r\n            \"tick-distance\": \"{{server.build.env.TICK_DISTANCE}}\",\r\n            \"texturepack-required\": \"{{server.build.env.TEXTUREPACK_REQUIRED}}\",\r\n            \"transport\": \"{{server.build.env.TRANSPORT}}\",\r\n            \"server-udp-ports\": \"{{server.build.env.SERVER_UDP_PORTS}}\",\r\n            \"server-portv6\": \"{{server.build.env.SERVER_PORT_V6}}\",\r\n            \"enable-lan-visibility\": \"{{server.build.env.LAN_VISIBILITY}}\",\r\n            \"allow-list\": \"{{server.build.env.ALLOW_LIST}}\",\r\n            \"chat-restriction\": \"{{server.build.env.CHAT_RESTRICTION}}\",\r\n            \"default-player-permission-level\": \"{{server.build.env.DEFAULT_PERMISSION}}\",\r\n            \"disable-custom-skins\": \"{{server.build.env.DISABLE_CUSTOM_SKINS}}\",\r\n            \"max-threads\": \"{{server.build.env.MAX_THREADS}}\",\r\n            \"compression-algorithm\": \"{{server.build.env.COMPRESSION_ALGORITHM}}\"\r\n        }\r\n    }\r\n}",
         "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
         "logs": "{}",
         "stop": "stop"
@@ -198,6 +198,66 @@
             "user_viewable": true,
             "user_editable": true,
             "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Allow List",
+            "description": "Require players to be listed in allowlist.json to join. Note: BDS enables this by default since 1.26.30 and warns at boot when the list is empty - setting true with an empty allowlist.json locks everyone out, including you.",
+            "env_variable": "ALLOW_LIST",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Chat Restriction",
+            "description": "Chat level for joining players. None is free chat; Dropped discards messages with a notice to the sender; Disabled hides the chat UI from non-operators entirely. Values are capitalized.",
+            "env_variable": "CHAT_RESTRICTION",
+            "default_value": "None",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:None,Dropped,Disabled",
+            "field_type": "text"
+        },
+        {
+            "name": "Default Player Permission",
+            "description": "Permission level granted to first-time joins (visitor, member, operator). Does not change existing players.",
+            "env_variable": "DEFAULT_PERMISSION",
+            "default_value": "member",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:visitor,member,operator",
+            "field_type": "text"
+        },
+        {
+            "name": "Disable Custom Skins",
+            "description": "Block player skins made outside official sources. Useful against offensive custom skins on family servers.",
+            "env_variable": "DISABLE_CUSTOM_SKINS",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Threads",
+            "description": "Maximum CPU threads BDS will use. 0 means no cap (use all cores). Lower it on shared hosts to keep one server from starving the rest.",
+            "env_variable": "MAX_THREADS",
+            "default_value": "8",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:0|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "Compression Algorithm",
+            "description": "Network packet compression. zlib packs smaller but costs much more CPU; snappy is far cheaper per byte with slightly larger packets. Use snappy on CPU-weak hosts or when players lag out from server strain.",
+            "env_variable": "COMPRESSION_ALGORITHM",
+            "default_value": "zlib",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:zlib,snappy",
             "field_type": "text"
         }
     ]

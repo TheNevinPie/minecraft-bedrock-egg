@@ -9,6 +9,13 @@ adoption. `v1.2.0` is the first strict-SemVer release.
 
 ## [Unreleased]
 
+Added:
+- New variables (all wired into `server.properties` auto-configuration):
+  `ALLOW_LIST`, `CHAT_RESTRICTION`, `DEFAULT_PERMISSION`,
+  `DISABLE_CUSTOM_SKINS`, `MAX_THREADS` (`0` = uncapped),
+  `COMPRESSION_ALGORITHM` (`zlib`/`snappy`; snappy recommended on
+  CPU-weak hosts).
+
 ## [1.2.0] - 2026-09-27
 
 Added (NetherNet support, verified against live BDS 1.26.51.1):
