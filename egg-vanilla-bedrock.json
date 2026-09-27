@@ -17,14 +17,14 @@
     "file_denylist": [],
     "startup": ".\/bedrock_server",
     "config": {
-        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-players\": \"{{server.build.env.MAX_PLAYERS}}\",\r\n            \"online-mode\": \"{{server.build.env.ONLINE_MODE}}\",\r\n            \"view-distance\": \"{{server.build.env.VIEW_DISTANCE}}\",\r\n            \"force-gamemode\": \"{{server.build.env.FORCE_GAMEMODE}}\",\r\n            \"tick-distance\": \"{{server.build.env.TICK_DISTANCE}}\",\r\n            \"texturepack-required\": \"{{server.build.env.TEXTUREPACK_REQUIRED}}\"\r\n        }\r\n    }\r\n}",
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-players\": \"{{server.build.env.MAX_PLAYERS}}\",\r\n            \"online-mode\": \"{{server.build.env.ONLINE_MODE}}\",\r\n            \"view-distance\": \"{{server.build.env.VIEW_DISTANCE}}\",\r\n            \"force-gamemode\": \"{{server.build.env.FORCE_GAMEMODE}}\",\r\n            \"tick-distance\": \"{{server.build.env.TICK_DISTANCE}}\",\r\n            \"texturepack-required\": \"{{server.build.env.TEXTUREPACK_REQUIRED}}\",\r\n            \"transport\": \"{{server.build.env.TRANSPORT}}\",\r\n            \"server-udp-ports\": \"{{server.build.env.SERVER_UDP_PORTS}}\",\r\n            \"server-portv6\": \"{{server.build.env.SERVER_PORT_V6}}\",\r\n            \"enable-lan-visibility\": \"{{server.build.env.LAN_VISIBILITY}}\"\r\n        }\r\n    }\r\n}",
         "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
         "logs": "{}",
         "stop": "stop"
     },
     "scripts": {
         "installation": {
-            "script": "#!\/bin\/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl jq\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ] && [ -n \"${BEDROCK_VERSION_CUSTOM}\" ]; then\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_CUSTOM}\"\r\nelse\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_TYPE}\"\r\nfi\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockLinux\") | .downloadUrl')\r\nelif [ \"${BEDROCK_VERSION}\" == \"preview\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock Preview server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockPreviewLinux\") | .downloadUrl')\r\nelse\r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\"\r\nfi\r\n\r\nDOWNLOAD_FILE=${DOWNLOAD_URL##*\/}\r\n\r\nif [ -z \"$DOWNLOAD_URL\" ] || [ \"$DOWNLOAD_URL\" = \"null\" ]; then\r\n    echo -e \"Failed to get download URL. Aborting.\"\r\n    exit 1\r\nfi\r\n\r\necho -e \"backing up config files\"\r\nrm -f *.bak versions.html.gz 2>\/dev\/null\r\ncp server.properties server.properties.bak 2>\/dev\/null\r\ncp permissions.json permissions.json.bak 2>\/dev\/null\r\ncp allowlist.json allowlist.json.bak 2>\/dev\/null\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm -f $DOWNLOAD_FILE\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties 2>\/dev\/null\r\ncp -rf permissions.json.bak permissions.json 2>\/dev\/null\r\ncp -rf allowlist.json.bak allowlist.json 2>\/dev\/null\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\"",
+            "script": "#!\/bin\/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl jq\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\nif [ \"${BEDROCK_VERSION_TYPE}\" == \"custom\" ] && [ -n \"${BEDROCK_VERSION_CUSTOM}\" ]; then\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_CUSTOM}\"\r\nelse\r\n    BEDROCK_VERSION=\"${BEDROCK_VERSION_TYPE}\"\r\nfi\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockLinux\") | .downloadUrl')\r\nelif [ \"${BEDROCK_VERSION}\" == \"preview\" ]; then\r\n    echo -e \"\\n Fetching latest Bedrock Preview server URL from API\"\r\n    DOWNLOAD_URL=$(curl -s https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links | jq -r '.result.links[] | select(.downloadType == \"serverBedrockPreviewLinux\") | .downloadUrl')\r\nelse\r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\"\r\nfi\r\n\r\nDOWNLOAD_FILE=${DOWNLOAD_URL##*\/}\r\n\r\nif [ -z \"$DOWNLOAD_URL\" ] || [ \"$DOWNLOAD_URL\" = \"null\" ]; then\r\n    echo -e \"Failed to get download URL. Aborting.\"\r\n    exit 1\r\nfi\r\n\r\necho -e \"backing up config files\"\r\nrm -rf *.bak keys.bak versions.html.gz 2>\/dev\/null\r\ncp server.properties server.properties.bak 2>\/dev\/null\r\ncp permissions.json permissions.json.bak 2>\/dev\/null\r\ncp allowlist.json allowlist.json.bak 2>\/dev\/null\r\ncp -r keys keys.bak 2>\/dev\/null\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm -f $DOWNLOAD_FILE\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties 2>\/dev\/null\r\ncp -rf permissions.json.bak permissions.json 2>\/dev\/null\r\ncp -rf allowlist.json.bak allowlist.json 2>\/dev\/null\r\nif [ -d keys.bak ]; then rm -rf keys; cp -r keys.bak keys; fi 2>\/dev\/null\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\"",
             "container": "ghcr.io\/parkervcp\/installers:debian",
             "entrypoint": "bash"
         }
@@ -154,6 +154,46 @@
             "name": "Texture Pack Required",
             "description": "If true, players must accept the server's resource pack to join. It also prevents players from using their own global resource packs while connected to the server.",
             "env_variable": "TEXTUREPACK_REQUIRED",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Network Transport",
+            "description": "Network transport used to accept client connections. NetherNet (WebRTC) is the current default; switch to RakNet only for old clients that cannot connect otherwise.",
+            "env_variable": "TRANSPORT",
+            "default_value": "nethernet",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:raknet,nethernet",
+            "field_type": "text"
+        },
+        {
+            "name": "NetherNet UDP Ports",
+            "description": "UDP ports for NetherNet client peer-to-peer transport. Leave empty to allocate from OS ephemeral ports. Pin a range on firewalled hosts (e.g. 32100-32149, one panel allocation per port required). NAT/Docker mapping form: PUBLIC_IP:EXTERNAL-START-EXTERNAL-END:INTERNAL-START-INTERNAL-END (e.g. 203.0.113.10:32100-32149:32100-32149). Ignored when Transport is raknet.",
+            "env_variable": "SERVER_UDP_PORTS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:120",
+            "field_type": "text"
+        },
+        {
+            "name": "IPv6 Port",
+            "description": "IPv6 gameplay port. Only used when Transport is raknet (ignored under nethernet, which opens a single dual-stack socket on the main port). Needs its own panel allocation to be reachable.",
+            "env_variable": "SERVER_PORT_V6",
+            "default_value": "19133",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:1|max:65535",
+            "field_type": "text"
+        },
+        {
+            "name": "LAN Visibility",
+            "description": "Respond to clients looking for servers on the LAN. Turn off on shared hosts or multi-server nodes to avoid port conflicts (under RakNet the server binds 19132/19133 for discovery even with custom ports).",
+            "env_variable": "LAN_VISIBILITY",
             "default_value": "false",
             "user_viewable": true,
             "user_editable": true,
