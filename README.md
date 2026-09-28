@@ -28,7 +28,7 @@ An updated Pterodactyl egg for Minecraft Bedrock Dedicated Server with automatic
 | `FORCE_GAMEMODE` | `false` | Force players to default gamemode |
 | `TICK_DISTANCE` | `10` | Simulation distance in chunks |
 | `TEXTUREPACK_REQUIRED` | `false` | Require resource pack acceptance |
-| `TRANSPORT` | `nethernet` | Network transport (`nethernet` WebRTC, or `raknet` for old clients) |
+| `TRANSPORT` | `raknet` | Network transport (`raknet` single-port reliable default, or `nethernet` WebRTC once its range is set up — required past 26.60) |
 | `SERVER_UDP_PORTS` | *(empty)* | NetherNet P2P UDP ports (see Setup below; empty = ephemeral) |
 | `SERVER_PORT_V6` | `19133` | IPv6 port (RakNet mode only) |
 | `LAN_VISIBILITY` | `false` | Respond to LAN discovery (keep off on shared hosts) |

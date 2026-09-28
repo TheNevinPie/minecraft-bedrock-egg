@@ -162,9 +162,9 @@
         },
         {
             "name": "Network Transport",
-            "description": "Transport used to accept client connections. NetherNet (WebRTC) is the default and the only transport past version 26.60. RakNet is a temporary fallback for old clients that cannot connect otherwise - do not deploy new servers on it.",
+            "description": "Transport used to accept client connections. RakNet is the default for reliability (single game port, no extra setup). Switch to NetherNet (WebRTC) once its UDP range, panel allocations and firewall rules are in place. Note: Mojang removes RakNet in 26.60, so treat it as temporary.",
             "env_variable": "TRANSPORT",
-            "default_value": "nethernet",
+            "default_value": "raknet",
             "user_viewable": true,
             "user_editable": true,
             "rules": "required|string|in:raknet,nethernet",
